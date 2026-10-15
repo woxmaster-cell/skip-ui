@@ -1098,7 +1098,11 @@ private func mergeNavigationDestinationsWithLayoutHints(_ destinations: Navigati
         LaunchedEffect(stackEffectKey) {
             delay(1000) // 1 second
             var syncedBackStackState: [String: BackStackState] = [:]
-            for key in stackKeys {
+            // BookSafe fork: sync against the CURRENT back stack, not the keys captured when this effect started. When the
+            // main thread is busy (e.g. a heavy first composition), this effect can resume after a new entry was pushed but
+            // before recomposition cancels it; syncing to the stale keys then dropped the new entry's state and the pushed
+            // view rendered blank (entry<SkipNavigationStackPushKey> finds no state).
+            for key in navBackStack.toList() {
                 let entryId = stableEntryId(forKey: key)
                 if let state = backStackState[entryId] {
                     syncedBackStackState[entryId] = state
