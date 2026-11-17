@@ -785,10 +785,13 @@ public final class List : View, Renderable {
 
             itemContent = {
                 SwipeToDismissBox(state: dismissState, enableDismissFromEndToStart: true, enableDismissFromStartToEnd: false, modifier: $0, backgroundContent: {
-                    /* Red background unconditional (destructive cue); icon only
-                       if the trash vector resolves — force-unwrapping inside a LazyColumn item would crash measurement. */
-                    Box(modifier: Modifier.background(androidx.compose.ui.graphics.Color.Red).fillMaxSize(), contentAlignment: androidx.compose.ui.Alignment.CenterEnd) {
-                        if let trashVector = Image.composeImageVector(named: "trash") {
+                    /* Red background + trash only while the row is swiped (destructive cue). At rest the
+                       background stays transparent: a row with a translucent listRowBackground would otherwise
+                       show the red permanently (BookSafe AND-BUG-027). Icon only if the trash vector resolves —
+                       force-unwrapping inside a LazyColumn item would crash measurement. */
+                    let swiping = dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart
+                    Box(modifier: Modifier.background(swiping ? androidx.compose.ui.graphics.Color.Red : androidx.compose.ui.graphics.Color.Transparent).fillMaxSize(), contentAlignment: androidx.compose.ui.Alignment.CenterEnd) {
+                        if swiping, let trashVector = Image.composeImageVector(named: "trash") {
                             Icon(imageVector: trashVector, contentDescription: "Delete", modifier = Modifier.padding(end: 24.dp), tint: androidx.compose.ui.graphics.Color.White)
                         }
                     }
